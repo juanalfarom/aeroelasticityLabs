@@ -16,11 +16,11 @@ data.G = 27100e06;                % Shear modulus [Pa]
 data.rho = 2700;                  % Structure density [kg/m^3]
 data.nu = 0.1;                    % nu
 data.v = 0.33;                    % Poisson`s ratio
-data.tskin = @(t) t;    % Upper and lower skin thickness [m]
-data.tspar = @(t) 3*t;  % Front and rear spar thickness [m]
+data.tskin = @(t) t;              % Upper and lower skin thickness [m]
+data.tspar = @(t) 2ç3*t;            % Front and rear spar thickness [m]
 
 
-%% Task 01
+%% TASK 01
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Assumptions: 
@@ -53,6 +53,26 @@ else
     fprintf('Convergence in task 01, thickness = %f m and cross sectional area = %f m \n',task1.thickness,task1.area)
 end
 
+
+%% TASK 02
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Assumptions: 
+%   -Wing is a continuous beam clamped at the wing root
+%   -The only contribution to stiffness is from the wing box
+%   -The mass is only the structural mass 
+% Task:
+%   -Estimate nu to match results for table 2
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+task2.firstWB = 6.74;
+task2.secondWB = 40.71;
+task2.thirdWB = 108.80;
+task2.chordwise = 22.95;
+task2.torsion = 38.05;
+
+
+%% FUNCTIONS
 function [t,area] = task1Fcn(data,task1)
     for i = 1:length(task1.possible_t)
          area = task1.A(task1.possible_t(i));
@@ -70,5 +90,5 @@ function [t,area] = task1Fcn(data,task1)
          end
     end
     t = 0;
-end
+end  % Task 01 solver function
 

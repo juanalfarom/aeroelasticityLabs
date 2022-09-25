@@ -43,7 +43,7 @@ task1.A = @(t) (data.nu*data.Cstr^2)-((data.nu*data.Cstr-2*data.tskin(t))*(data.
 task1.Ixx = @(t) (((1/12)*data.nu*data.Cstr^4)-((1/12)*(data.Cstr-2*data.tspar(t))*(data.nu*data.Cstr-2*data.tskin(t))^3));
 task1.Izz = @(t) (((1/12)*data.nu*data.Cstr^4)-((1/12)*((data.Cstr-2*data.tspar(t))^3)*(data.nu*data.Cstr-2*data.tskin(t))));
 % Vector with possible thickness [m]
-task1.possible_t = linspace(0.01,5,10000);
+task1.possible_t = linspace(0.01,1,100000);
 
 % Call function to solve task 01
 [task1.thickness,task1.area] = task1Fcn(data,task1);
