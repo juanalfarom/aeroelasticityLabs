@@ -16,8 +16,8 @@ data.G = 27100e06;                % Shear modulus [Pa]
 data.rho = 2700;                  % Structure density [kg/m^3]
 data.nu = 0.1;                    % nu
 data.v = 0.33;                    % Poisson`s ratio
-data.tskin = @(t) t;    % Upper and lower skin thickness [m]
-data.tspar = @(t) 3*t;  % Front and rear spar thickness [m]
+data.tskin = @(t) t;              % Upper and lower skin thickness [m]
+data.tspar = @(t) 3*t;            % Front and rear spar thickness [m]
 
 
 %% TASK 01
