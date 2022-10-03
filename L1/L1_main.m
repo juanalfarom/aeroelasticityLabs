@@ -39,6 +39,8 @@ task1.torsion = 22.57;
 
 % Cross sectional area of the beam as function of thickness [m^2]
 task1.A = @(t) (data.nu*data.Cstr^2)-((data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t)));
+% Beam total mass as function of thickness [kg]
+task1.Mass = @(t) data*rho*data.L*task1.A(t);
 % Second moments of area of the beam as function of thickness [mm^4]
 task1.Ixx = @(t) (((1/12)*data.nu*data.Cstr^4)-((1/12)*(data.Cstr-2*data.tspar(t))*(data.nu*data.Cstr-2*data.tskin(t))^3));
 task1.Izz = @(t) (((1/12)*data.nu*data.Cstr^4)-((1/12)*((data.Cstr-2*data.tspar(t))^3)*(data.nu*data.Cstr-2*data.tskin(t))));
@@ -100,7 +102,7 @@ end
 %   -Obtain incomp. divergence dynamic presure and speed at SL
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-task4.S = 0.625; 
+task4.e = 0.625; 
 task4.S = 62.5;
 task4.c = 6.25; 
 task4.Cl_alpha = 2*pi;
@@ -133,9 +135,9 @@ plot(task4.vVector,task4.hVector)
 function [t,area] = task1Fcn(data,task1)
     for i = 1:length(task1.possible_t)
          area = task1.A(task1.possible_t(i));
-         C1 = (data.rho*area*data.L*task1.firstWB^2)/(data.E*task1.Izz(task1.possible_t(i)));
-         C2 = (data.rho*area*data.L*task1.secondWB^2)/(data.E*task1.Izz(task1.possible_t(i)));
-         C3 = (data.rho*area*data.L*task1.secondWB^2)/(data.E*task1.Izz(task1.possible_t(i)));
+         C1 = (data.rho*area*data.L*task1.firstWB^2)/(data.E*task1.Ixx(task1.possible_t(i)));
+         C2 = (data.rho*area*data.L*task1.secondWB^2)/(data.E*task1.Ixx(task1.possible_t(i)));
+         C3 = (data.rho*area*data.L*task1.secondWB^2)/(data.E*task1.Ixx(task1.possible_t(i)));
          
          mode1 = cos(C1)*cosh(C1);
          mode2 = cos(C2)*cosh(C2);
