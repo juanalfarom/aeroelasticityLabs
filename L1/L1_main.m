@@ -51,66 +51,66 @@ task1.Iyy = @(t) ((1/12)*data.nu*data.Cstr*data.Cstr*(data.Cstr^2 + (data.nu*dat
 task1.J   = @(t) data.rho*task1.Iyy(t);
 % Vector with possible thickness [m]
 
-for i=1:length(task1.possible_t)
-    %Initializing the matrices
-    task1.K = zeros(data.nodes*6,data.nodes*6);
-    task1.masses = zeros(1,data.nodes);
-    task1.M = zeros(data.nodes*6,data.nodes*6);
-    task1.M_minus = zeros(data.nodes*6,data.nodes*6);
-
-    current_index = 1;
-
-    for j=1:(data.nodes-1)
-        task1.K(current_index:current_index+11,current_index:current_index+11) = ...
-            task1.K(current_index:current_index+11,current_index:current_index+11) + ...
-                    Stiffness_matrix_beam(data,task1.A(task1.possible_t(i)), ...
-                                          task1.Ixx(task1.possible_t(i)), ...
-                                          task1.Izz(task1.possible_t(i)), ...
-                                          task1.J(task1.possible_t(i)));
-        task1.thickness = task1.possible_t(i);
-        task1.area = task1.A(task1.possible_t(i));
-        task1.mass = task1.Mass(task1.possible_t(i));
-
-        if j==1
-            task1.masses(j) = task1.mass/(data.nodes-1)/2;
-            task1.masses(end) = task1.mass/(data.nodes-1)/2;
-        else
-            task1.masses(j) = task1.mass/(data.nodes-1);
-        end
-        current_index = current_index + 6;
-    end
-
-    current_index = 1;
-
-    for j=1:data.nodes
-        task1.M(current_index:current_index+5,current_index:current_index+5) = ...
-                    Mass_matrix_beam(task1.masses(j), ...
-                                     task1.Ixx(task1.possible_t(i)), ...
-                                     task1.Iyy(task1.possible_t(i)), ...
-                                     task1.Izz(task1.possible_t(i)));
-        current_index = current_index + 6;
-    end
-    
-    for j=1:(6*data.nodes)
-        task1.M_minus(j,j) = task1.M(j,j)^(-1/2);
-    end
-
-    task1.K_changed = task1.M_minus*task1.K*task1.M_minus;
-
-    [task1.eigenvectors,task1.eigenvalues] = eig(task1.K_changed);
-
-    task1.freqs = diag(real(sqrt(real(task1.eigenvalues))));
-    task1.modes = task1.M_minus*real(task1.eigenvectors);
-    
-    % Call function to solve task 01
-    %[task1.thickness,task1.area] = task1Fcn(data,task1);
-    if (task1.thickness == 0) || (task1.area <=0)
-        fprintf('No convergence in task 01 \n')
-    else
-        fprintf('Convergence in task 01, thickness = %f m and cross sectional area = %f m \n',task1.thickness,task1.area)
-    end
-
-end
+% for i=1:length(task1.possible_t)
+%     %Initializing the matrices
+%     task1.K = zeros(data.nodes*6,data.nodes*6);
+%     task1.masses = zeros(1,data.nodes);
+%     task1.M = zeros(data.nodes*6,data.nodes*6);
+%     task1.M_minus = zeros(data.nodes*6,data.nodes*6);
+% 
+%     current_index = 1;
+% 
+%     for j=1:(data.nodes-1)
+%         task1.K(current_index:current_index+11,current_index:current_index+11) = ...
+%             task1.K(current_index:current_index+11,current_index:current_index+11) + ...
+%                     Stiffness_matrix_beam(data,task1.A(task1.possible_t(i)), ...
+%                                           task1.Ixx(task1.possible_t(i)), ...
+%                                           task1.Izz(task1.possible_t(i)), ...
+%                                           task1.J(task1.possible_t(i)));
+%         task1.thickness = task1.possible_t(i);
+%         task1.area = task1.A(task1.possible_t(i));
+%         task1.mass = task1.Mass(task1.possible_t(i));
+% 
+%         if j==1
+%             task1.masses(j) = task1.mass/(data.nodes-1)/2;
+%             task1.masses(end) = task1.mass/(data.nodes-1)/2;
+%         else
+%             task1.masses(j) = task1.mass/(data.nodes-1);
+%         end
+%         current_index = current_index + 6;
+%     end
+% 
+%     current_index = 1;
+% 
+%     for j=1:data.nodes
+%         task1.M(current_index:current_index+5,current_index:current_index+5) = ...
+%                     Mass_matrix_beam(task1.masses(j), ...
+%                                      task1.Ixx(task1.possible_t(i)), ...
+%                                      task1.Iyy(task1.possible_t(i)), ...
+%                                      task1.Izz(task1.possible_t(i)));
+%         current_index = current_index + 6;
+%     end
+%     
+%     for j=1:(6*data.nodes)
+%         task1.M_minus(j,j) = task1.M(j,j)^(-1/2);
+%     end
+% 
+%     task1.K_changed = task1.M_minus*task1.K*task1.M_minus;
+% 
+%     [task1.eigenvectors,task1.eigenvalues] = eig(task1.K_changed);
+% 
+%     task1.freqs = diag(real(sqrt(real(task1.eigenvalues))));
+%     task1.modes = task1.M_minus*real(task1.eigenvectors);
+%     
+%     % Call function to solve task 01
+%     %[task1.thickness,task1.area] = task1Fcn(data,task1);
+%     if (task1.thickness == 0) || (task1.area <=0)
+%         fprintf('No convergence in task 01 \n')
+%     else
+%         fprintf('Convergence in task 01, thickness = %f m and cross sectional area = %f m \n',task1.thickness,task1.area)
+%     end
+% 
+% end
 
 %% TASK 02
 
@@ -138,12 +138,12 @@ task2.Izz = @(nu) (((1/12)*nu*data.Cstr^4)-((1/12)*((data.Cstr-2*data.tspar(task
 task2.possible_nu = linspace(0.01,0.5,100000);
 
 % Call function to solve task 02
-[task2.nu,task2.area] = task2Fcn(data,task2);
-if (task2.nu == 0) || (task2.area <=0)
-    fprintf('No convergence in task 02 \n')
-else
-    fprintf('Convergence in task 02, nu = %f m and cross sectional area = %f m \n',task2.nu,task2.area)
-end
+%[task2.nu,task2.area] = task2Fcn(data,task2);
+% if (task2.nu == 0) || (task2.area <=0)
+%     fprintf('No convergence in task 02 \n')
+% else
+%     fprintf('Convergence in task 02, nu = %f m and cross sectional area = %f m \n',task2.nu,task2.area)
+% end
 
 %% TASK 03
 
@@ -162,47 +162,60 @@ task4.e = 0.625;
 task4.S = 62.5;
 task4.c = 6.25; 
 task4.Cl_alpha = 2*pi;
-task4.Kt = 1;
+task4.Kt = 10000000;
 task4.EA = 0.35*task4.c;
 task4.RS = 0.55*task4.c;
 task4.FS = 0.15*task4.c;
 task4.AF = 0.25*task4.c;
 
 % ISA data
-task4.T0 = 288.15; 
-task4.alpha = -0.0065;
-task4.rho0 = 1.225;
-task4.g = 9.80665;
-task4.R = 287.1;
-task4.gamma = 1.4;
+data.T0 = 288.15; 
+data.alpha = -0.0065;
+data.rho0 = 1.225;
+data.g = 9.80665;
+data.R = 287.1;
+data.gamma = 1.4;
+data.a = @(h) sqrt(data.gamma*data.R*(data.T0+data.alpha*h));
+data.rho = @(h) data.rho0*(1+(data.alpha*h)/data.T0)^(-1-(data.g/(data.R*data.alpha)));
+data.T = @(h) data.T0 + data.alpha*h;
 
-% Dynamic pressure computation
-task4.qdiv = task4.Kt/(task4.Cl_alpha*task4.S*task4.e);
+task4.rhoSL = data.rho(0);
+task4.aSL = data.a(0);
+task4.qdiv = task4.Kt/(task4.S*task4.e*task4.Cl_alpha);
+task4.vSL = sqrt(task4.qdiv/(0.5*task4.rhoSL));
+task4.MSL = task4.vSL/task4.aSL;
+task4.qdivi = task4.qdiv/sqrt(1-task4.MSL^2);
 
-task4.hVector = linspace(0,11000,1000);
+task4.KTAS = task4.vSL*1.94384;
 
-for i = 1:length(task4.hVector)
-    task4.vVector(i) = sqrt(1/(2*task4.qdiv*task4.rho0*(1+(task4.alpha*task4.hVector(i))/task4.T0)^(-1 ...
-        -task4.g/(task4.R*task4.alpha))));
-end
-
-
+fprintf('The incompressible divergence dynamic pressure at sea level qdiv = %f \n', task4.qdivi)
+fprintf('The divergence speed at sea level Vdiv = %f knots \n', task4.KTAS)
 
 
 %% TASK 05
 
-task5.hRange = [0, 10000, 20000, 30000]*0.3048;
+task5.hRange = [0 10000 20000 30000]*0.3048;
 
 for i = 1:length(task5.hRange)
-    task5.c(i) = 0.25*((1/task4.qdiv)^2)*((task4.gamma*task4.R*(task4.T0+task4.alpha*task5.hRange(i)))^2)...
-        *((task4.rho0*(1+(task4.alpha*task5.hRange(i))/task4.T0)^(-1 ...
-        -task4.g/(task4.R*task4.alpha)))^4);
-    %task5.M(i) = sqrt((-1+sqrt(1+4*task5.c(i)))/(2*task5.c(i)));
-    coefvct = [-task5.c(i)  0 (task5.c(i)-1) 0  2  0 -1];     % Coefficient Vector
-    task5.M(i) = max(real(roots(coefvct)))
+    task5.rho(i) = data.rho(task5.hRange(i));
+    task5.a(i) = data.a(task5.hRange(i));
+    task5.A = (0.25*(task5.rho(i)^2)*(task5.a(i)^4))/(task4.qdiv^2);
+    task5.coefvct = [-task5.A  0 task5.A  0  1 0 -1];     % Coefficient Vector
+    task5.x = real(roots(task5.coefvct));
+    task5.param = 0;
+    for j = 6:-1:1
+        task5.a = task5.x(j)-1;
+    if ((task5.x(j) > task5.param) && (abs(task5.a) > 1e-03))
+        task5.M(i) = task5.x(j);
+        break
+    end
+    end
 end
-
-plot(task5.M,task5.hRange)
+figure(1)
+plot(task5.M, task5.hRange, 'b')
+for i = 1:length(task5.hRange)
+    yline(task5.hRange(i), 'r');
+end
 %% FUNCTIONS
 function [t,area] = task1Fcn(data,task1)
     for i = 1:length(task1.possible_t)
