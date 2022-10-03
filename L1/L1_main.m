@@ -174,6 +174,7 @@ task4.alpha = -0.0065;
 task4.rho0 = 1.225;
 task4.g = 9.80665;
 task4.R = 287.1;
+task4.gamma = 1.4;
 
 % Dynamic pressure computation
 task4.qdiv = task4.Kt/(task4.Cl_alpha*task4.S*task4.e);
@@ -185,8 +186,23 @@ for i = 1:length(task4.hVector)
         -task4.g/(task4.R*task4.alpha))));
 end
 
-plot(task4.vVector,task4.hVector)
 
+
+
+%% TASK 05
+
+task5.hRange = [0, 10000, 20000, 30000]*0.3048;
+
+for i = 1:length(task5.hRange)
+    task5.c(i) = 0.25*((1/task4.qdiv)^2)*((task4.gamma*task4.R*(task4.T0+task4.alpha*task5.hRange(i)))^2)...
+        *((task4.rho0*(1+(task4.alpha*task5.hRange(i))/task4.T0)^(-1 ...
+        -task4.g/(task4.R*task4.alpha)))^4);
+    %task5.M(i) = sqrt((-1+sqrt(1+4*task5.c(i)))/(2*task5.c(i)));
+    coefvct = [-task5.c(i)  0 (task5.c(i)-1) 0  2  0 -1];     % Coefficient Vector
+    task5.M(i) = max(real(roots(coefvct)))
+end
+
+plot(task5.M,task5.hRange)
 %% FUNCTIONS
 function [t,area] = task1Fcn(data,task1)
     for i = 1:length(task1.possible_t)
