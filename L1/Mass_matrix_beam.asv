@@ -1,9 +1,8 @@
 function M = Mass_matrix_beam(m,Ix,Iy,Iz)
 %Returns the mass matrix for a beam
 
-M = zeros(2,2);
-M(1,1) = m;
-M(2,2) = Iy;
+M = zeros(6,6);
+
 
 % M = zeros(6,6);
 % M(1,1) = 0;

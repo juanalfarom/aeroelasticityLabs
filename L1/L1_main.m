@@ -50,67 +50,83 @@ task1.Izz = @(t) (((1/12)*data.nu*data.Cstr*(data.Cstr)^3)-((1/12)*(data.nu*data
 task1.Iyy = @(t) ((1/12)*data.nu*data.Cstr*data.Cstr*(data.Cstr^2 + (data.nu*data.Cstr)^2)) - ((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))*((data.Cstr-2*data.tspar(t))^2 + (data.nu*data.Cstr-2*data.tskin(t))^2));
 task1.J   = @(t) data.rho*task1.Iyy(t);
 % Vector with possible thickness [m]
+for i=1:length(task1.possible_t)
+    %Initializing the matrices
+    task1.K = zeros(data.nodes*2,data.nodes*2);
+    task1.masses = zeros(1,data.nodes);
+    task1.M = zeros(data.nodes*2,data.nodes*2);
+    task1.M_minus = zeros(data.nodes*2,data.nodes*2);
 
-% for i=1:length(task1.possible_t)
-%     %Initializing the matrices
-%     task1.K = zeros(data.nodes*6,data.nodes*6);
-%     task1.masses = zeros(1,data.nodes);
-%     task1.M = zeros(data.nodes*6,data.nodes*6);
-%     task1.M_minus = zeros(data.nodes*6,data.nodes*6);
-% 
-%     current_index = 1;
-% 
-%     for j=1:(data.nodes-1)
-%         task1.K(current_index:current_index+11,current_index:current_index+11) = ...
-%             task1.K(current_index:current_index+11,current_index:current_index+11) + ...
-%                     Stiffness_matrix_beam(data,task1.A(task1.possible_t(i)), ...
-%                                           task1.Ixx(task1.possible_t(i)), ...
-%                                           task1.Izz(task1.possible_t(i)), ...
-%                                           task1.J(task1.possible_t(i)));
-%         task1.thickness = task1.possible_t(i);
-%         task1.area = task1.A(task1.possible_t(i));
-%         task1.mass = task1.Mass(task1.possible_t(i));
-% 
-%         if j==1
-%             task1.masses(j) = task1.mass/(data.nodes-1)/2;
-%             task1.masses(end) = task1.mass/(data.nodes-1)/2;
-%         else
-%             task1.masses(j) = task1.mass/(data.nodes-1);
-%         end
-%         current_index = current_index + 6;
-%     end
-% 
-%     current_index = 1;
-% 
-%     for j=1:data.nodes
-%         task1.M(current_index:current_index+5,current_index:current_index+5) = ...
-%                     Mass_matrix_beam(task1.masses(j), ...
-%                                      task1.Ixx(task1.possible_t(i)), ...
-%                                      task1.Iyy(task1.possible_t(i)), ...
-%                                      task1.Izz(task1.possible_t(i)));
-%         current_index = current_index + 6;
-%     end
-%     
-%     for j=1:(6*data.nodes)
-%         task1.M_minus(j,j) = task1.M(j,j)^(-1/2);
-%     end
-% 
-%     task1.K_changed = task1.M_minus*task1.K*task1.M_minus;
-% 
-%     [task1.eigenvectors,task1.eigenvalues] = eig(task1.K_changed);
-% 
-%     task1.freqs = diag(real(sqrt(real(task1.eigenvalues))));
-%     task1.modes = task1.M_minus*real(task1.eigenvectors);
-%     
-%     % Call function to solve task 01
-%     %[task1.thickness,task1.area] = task1Fcn(data,task1);
-%     if (task1.thickness == 0) || (task1.area <=0)
-%         fprintf('No convergence in task 01 \n')
-%     else
-%         fprintf('Convergence in task 01, thickness = %f m and cross sectional area = %f m \n',task1.thickness,task1.area)
-%     end
-% 
-% end
+    current_index = 1;
+
+    for j=1:(data.nodes-1)
+        if j==1||j==(data.nodes-1)
+            l = data.L/(data.nodes-1)/2;
+        else
+            l = data.L/(data.nodes-1);
+        end
+
+        task1.K(current_index:current_index+3,current_index:current_index+3) = ...
+            task1.K(current_index:current_index+3,current_index:current_index+3) + ...
+                    Stiffness_matrix_beam(data,task1.A(task1.possible_t(i)), ...
+                                          task1.Ixx(task1.possible_t(i)), ...
+                                          task1.Izz(task1.possible_t(i)), ...
+                                          task1.J(task1.possible_t(i)), ...
+                                          l);
+        task1.thickness = task1.possible_t(i);
+        task1.area = task1.A(task1.possible_t(i));
+        task1.mass = task1.Mass(task1.possible_t(i));
+
+        if j==1
+            task1.masses(j) = task1.mass/(data.nodes-1)/2;
+            task1.masses(end) = task1.mass/(data.nodes-1)/2;
+        else
+            task1.masses(j) = task1.mass/(data.nodes-1);
+        end
+        current_index = current_index + 2;
+    end
+    
+    %Clamping
+    task1.K(1,1) = 0;
+    task1.K(2,2) = 0;
+
+    current_index = 1;
+
+    for j=1:data.nodes
+        task1.M(current_index:current_index+1,current_index:current_index+1) = ...
+                    Mass_matrix_beam(task1.masses(j), ...
+                                     task1.Ixx(task1.possible_t(i)), ...
+                                     task1.Iyy(task1.possible_t(i)), ...
+                                     task1.Izz(task1.possible_t(i)));
+        current_index = current_index + 2;
+    end
+    
+    for j=1:(2*data.nodes)
+        task1.M_minus(j,j) = task1.M(j,j)^(-1/2);
+    end
+
+    task1.K_changed = task1.M_minus*task1.K*task1.M_minus;
+
+    [task1.eigenvectors,task1.eigenvalues] = eig(task1.K_changed);
+
+    task1.freqs = diag(real(sqrt(real(task1.eigenvalues))));
+    task1.modes = task1.M_minus*real(task1.eigenvectors);
+
+    for j=1:16
+        i
+        bend(j) = task1.modes(:,3);
+    end
+    
+    % Call function to solve task 01
+    %[task1.thickness,task1.area] = task1Fcn(data,task1);
+    if (task1.thickness == 0) || (task1.area <=0)
+        fprintf('No convergence in task 01 \n')
+    else
+        fprintf('Convergence in task 01, thickness = %f m and cross sectional area = %f m \n',task1.thickness,task1.area)
+    end
+
+end
+
 
 %% TASK 02
 
