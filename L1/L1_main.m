@@ -189,12 +189,12 @@ task4.qdivi = task4.qdiv/sqrt(1-task4.MSL^2);
 task4.KTAS = task4.vSL*1.94384;
 
 fprintf('The incompressible divergence dynamic pressure at sea level qdiv = %f \n', task4.qdivi)
-fprintf('The divergence speed at sea level Vdiv = %f knots \n', task4.KTAS)
+fprintf('The incompressible divergence speed at sea level Vdiv = %f knots \n', task4.KTAS)
 
 
 %% TASK 05
 
-task5.hRange = [0 10000 20000 30000]*0.3048;
+task5.hRange = [0 5000 10000 20000 30000 35000]*0.3048;
 
 for i = 1:length(task5.hRange)
     task5.rho(i) = data.rho(task5.hRange(i));
@@ -211,6 +211,11 @@ for i = 1:length(task5.hRange)
     end
     end
 end
+task5.Vdivc = sqrt(task4.qdivi/(0.5*task4.rhoSL));
+task5.KTAS = task5.Vdivc*1.94384;
+fprintf('The compressible divergence speed at sea level Vdiv = %f knots \n', task5.KTAS)
+
+
 figure(1)
 plot(task5.M, task5.hRange, 'b')
 for i = 1:length(task5.hRange)
