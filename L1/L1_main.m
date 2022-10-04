@@ -18,8 +18,11 @@ data.nu = 0.1;                    % nu
 data.v = 0.33;                    % Poisson`s ratio
 data.tskin = @(t) t;              % Upper and lower skin thickness [m]
 data.tspar = @(t) 3*t;            % Front and rear spar thickness [m]
+
+%data.tspar = @(t) t;            % Front and rear spar thickness [m]
+
 data.nodes = 8;                   % Number of nodes the beam will be divided in []
-data.ntries = 1;                  % Number of tries for the thickness []
+data.ntries = 2;                  % Number of tries for the thickness []
 
 %% TASK 01
 
@@ -32,13 +35,21 @@ data.ntries = 1;                  % Number of tries for the thickness []
 %   -Estimate t to match results for nu = 0.1
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-task1.possible_t = linspace(0,0.01,data.ntries);
+% Vector with possible thickness [m]s
+task1.possible_t = linspace(0.0001,0.003,data.ntries);
 
 task1.firstWB = 3.47;
 task1.secondWB = 21.27;
 task1.thirdWB = 58.13;
 task1.chordwise = 21.75;
-task1.torsion = 22.57;
+task1.torsionWB = 22.57;
+
+task1.firstWB_error = 1e9;
+task1.secondWB_error = 1e9;
+task1.thirdWB_error = 1e9;
+task1.chordwise_error = 1e9;
+task1.torsionWB_error = 1e9;
+task1.error = 1e9;
 
 % Cross sectional area of the beam as function of thickness [m^2]
 task1.A = @(t) (data.nu*data.Cstr^2)-((data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t)));
@@ -49,7 +60,11 @@ task1.Ixx = @(t) (((1/12)*data.Cstr*(data.nu*data.Cstr)^3)-((1/12)*(data.Cstr-2*
 task1.Izz = @(t) (((1/12)*data.nu*data.Cstr*(data.Cstr)^3)-((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))^3));
 task1.Iyy = @(t) ((1/12)*data.nu*data.Cstr*data.Cstr*(data.Cstr^2 + (data.nu*data.Cstr)^2)) - ((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))*((data.Cstr-2*data.tspar(t))^2 + (data.nu*data.Cstr-2*data.tskin(t))^2));
 task1.J   = @(t) data.rho*task1.Iyy(t);
-% Vector with possible thickness [m]
+
+%If col> dividing_col --> torsion mode
+task1.dividing_col = (2*data.nodes - 2)/2 + 2;
+
+
 for i=1:length(task1.possible_t)
     %Initializing the matrices
     task1.K = zeros(data.nodes*2,data.nodes*2);
@@ -72,7 +87,7 @@ for i=1:length(task1.possible_t)
                                           task1.Ixx(task1.possible_t(i)), ...
                                           task1.Izz(task1.possible_t(i)), ...
                                           task1.J(task1.possible_t(i)), ...
-                                          l);
+                                          data.L/(data.nodes-1));
         task1.thickness = task1.possible_t(i);
         task1.area = task1.A(task1.possible_t(i));
         task1.mass = task1.Mass(task1.possible_t(i));
@@ -85,10 +100,6 @@ for i=1:length(task1.possible_t)
         end
         current_index = current_index + 2;
     end
-    
-    %Clamping
-    task1.K(1,1) = 0;
-    task1.K(2,2) = 0;
 
     current_index = 1;
 
@@ -100,33 +111,100 @@ for i=1:length(task1.possible_t)
                                      task1.Izz(task1.possible_t(i)));
         current_index = current_index + 2;
     end
+
+    
     
     for j=1:(2*data.nodes)
         task1.M_minus(j,j) = task1.M(j,j)^(-1/2);
     end
 
+    %Clamping
+    task1.M(1,1) = 0;
+    task1.M(2,2) = 0;
+    task1.M_minus(1,1) = 0;
+    task1.M_minus(2,2) = 0;
+
     task1.K_changed = task1.M_minus*task1.K*task1.M_minus;
 
     [task1.eigenvectors,task1.eigenvalues] = eig(task1.K_changed);
 
-    task1.freqs = diag(real(sqrt(real(task1.eigenvalues))));
-    task1.modes = task1.M_minus*real(task1.eigenvectors);
+    task1.freqs = diag(sqrt(task1.eigenvalues))/2/pi;
+    task1.modes = task1.M_minus*(task1.eigenvectors);
 
-    for j=1:16
-        i
-        bend(j) = task1.modes(:,3);
+    for k=1:(2*data.nodes)
+        for j=1:data.nodes
+            task1.bending(j,k) = task1.modes((2*j-1),k);
+        end
+        for j=(data.nodes+1):(2*data.nodes)
+            task1.torsion(j-data.nodes,k) = task1.modes(2*(j-data.nodes),k);
+        end
+    end
+
+    for j=3:task1.dividing_col
+        task1.bending_modes.freqs(j-2) = task1.freqs(j);
+        task1.bending_modes.bending(:,j-2) = task1.bending(:,j);
+        task1.bending_modes.torsion(:,j-2) = task1.torsion(:,j);
     end
     
-    % Call function to solve task 01
-    %[task1.thickness,task1.area] = task1Fcn(data,task1);
-    if (task1.thickness == 0) || (task1.area <=0)
-        fprintf('No convergence in task 01 \n')
-    else
-        fprintf('Convergence in task 01, thickness = %f m and cross sectional area = %f m \n',task1.thickness,task1.area)
+    for j=(task1.dividing_col+1):(2*data.nodes)
+        task1.torsion_modes.freqs(j-task1.dividing_col) = task1.freqs(j);
+        task1.torsion_modes.bending(:,j-task1.dividing_col) = task1.bending(:,j);
+        task1.torsion_modes.torsion(:,j-task1.dividing_col) = task1.torsion(:,j);
+    end
+    
+    task1.firstWB_error = sqrt(abs(task1.firstWB^2 - task1.bending_modes.freqs(1)^2));
+    task1.secondWB_error = sqrt(abs(task1.secondWB^2 - task1.bending_modes.freqs(2)^2));
+    task1.thirdWB_error = sqrt(abs(task1.thirdWB^2 - task1.bending_modes.freqs(3)^2));
+    task1.chordwise_error = sqrt(abs(task1.chordwise^2 - task1.bending_modes.freqs(1)^2));
+    task1.torsionWB_error = sqrt(abs(task1.torsionWB^2 - task1.torsion_modes.freqs(1)^2));
+
+    error = task1.firstWB_error + task1.secondWB_error + task1.thirdWB_error + task1.torsionWB_error;
+    
+    if error < task1.error
+        task1.error = error;
+        fprintf('The simulation is closer to converging with t = %f and a total error of %f \n',task1.thickness,task1.error)
+        solution = task1;
     end
 
 end
 
+task1 = solution;
+
+clear('solution','error','i','j','k')
+
+figure(1)
+sgtitle(['Bending modes for t = ', num2str(task1.thickness)])
+for i=1:length(task1.bending_modes.freqs)/2+1
+    subplot(data.nodes/2,2,i)
+    plot(task1.bending_modes.bending(:,i))
+    title(['Bending mode with freq = ' num2str(task1.bending_modes.freqs(i))])
+
+    if i<length(task1.bending_modes.freqs)/2 && data.nodes>10
+        subplot(data.nodes/2,2,i+10)
+        plot(task1.bending_modes.bending(:,i+10))
+        title(['Bending mode with freq = ' num2str(task1.bending_modes.freqs(i+10))])
+    end
+
+end
+
+hold off
+
+figure(2)
+sgtitle(['Torsion modes for t = ', num2str(task1.thickness)])
+for i=1:length(task1.bending_modes.freqs)/2+1
+    subplot(data.nodes/2,2,i)
+    plot(task1.torsion_modes.torsion(:,i))
+    title(['Torsion mode with freq = ' num2str(task1.torsion_modes.freqs(i))])
+
+    if i<length(task1.bending_modes.freqs)/2 && data.nodes>10
+        subplot(data.nodes/2,2,i+10)
+        plot(task1.torsion_modes.torsion(:,i+10))
+        title(['Torsion mode with freq = ' num2str(task1.torsion_modes.freqs(i+10))])
+    end
+
+end
+
+hold off
 
 %% TASK 02
 
@@ -232,7 +310,10 @@ plot(task5.M, task5.hRange, 'b')
 for i = 1:length(task5.hRange)
     yline(task5.hRange(i), 'r');
 end
+
 %% FUNCTIONS
+
+
 function [t,area] = task1Fcn(data,task1)
     for i = 1:length(task1.possible_t)
          area = task1.A(task1.possible_t(i));
