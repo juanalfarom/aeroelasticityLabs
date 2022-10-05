@@ -3,7 +3,7 @@ function K = Stiffness_matrix_beam(data,A,Ix,Iz,J,L)
 
 K = zeros(4,4);
 
-K(1,:) = [12*data.E*Iz/(L^3),0,-12*data.E*Iz/(L^3),0];
+K(1,:) = [12*data.E*Ix/(L^3),0,-12*data.E*Ix/(L^3),0];
 K(3,:) = -K(1,:);
 K(2,:) = [0,data.G*J/L,0,-data.G*J/L];
 K(4,:) = -K(2,:);
