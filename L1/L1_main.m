@@ -240,6 +240,11 @@ task2.possible_nu = linspace(0.01,0.5,100000);
 % end
 
 %% TASK 03
+task3.J = 
+task3.I = 
+kb = 64*E*I
+kt = 4*J*data.G/(3*data.L);
+
 
 %% TASK 04
 
