@@ -275,7 +275,7 @@ task4.e = 0.625;
 task4.S = 62.5;
 task4.c = 6.25; 
 task4.Cl_alpha = 2*pi;
-task4.Kt = 10000000;
+task4.Kt = 1.4493e07;
 task4.EA = 0.35*task4.c;
 task4.RS = 0.55*task4.c;
 task4.FS = 0.15*task4.c;
@@ -285,19 +285,20 @@ task4.AF = 0.25*task4.c;
 data.T0 = 288.15; 
 data.alpha = -0.0065;
 data.rho0 = 1.225;
+data.p0 = 101352.9;
 data.g = 9.80665;
 data.R = 287.1;
 data.gamma = 1.4;
 data.a = @(h) sqrt(data.gamma*data.R*(data.T0+data.alpha*h));
 data.rho = @(h) data.rho0*(1+(data.alpha*h)/data.T0)^(-1-(data.g/(data.R*data.alpha)));
 data.T = @(h) data.T0 + data.alpha*h;
+data.p = @(h) data.p0*((data.T(h)/data.T0)^(-data.g/(data.alpha*data.R)));
 
 task4.rhoSL = data.rho(0);
 task4.aSL = data.a(0);
 task4.qdivi = task4.Kt/(task4.S*task4.e*task4.Cl_alpha); 
 task4.vSLi = sqrt(task4.qdivi/(0.5*task4.rhoSL)); 
-task4.MSL = task4.vSLi/task4.aSL;  
-task4.qdivc = task4.qdivi/sqrt(1-task4.MSL^2); 
+task4.MSL = task4.vSLi/task4.aSL;   
 
 task4.KTAS = task4.vSLi*1.94384; 
 
@@ -307,34 +308,45 @@ fprintf('The incompressible divergence speed at sea level Vdiv = %f knots \n', t
 
 %% TASK 05
 
-task5.hRange = linspace(0, 30000, 10000)*0.3048;
+task5.hRange = linspace(0, 45000, 45000)*0.3048;
 
 for i = 1:length(task5.hRange)
     task5.rho(i) = data.rho(task5.hRange(i));
     task5.a(i) = data.a(task5.hRange(i));
     task5.A = (0.25*(task5.rho(i)^2)*(task5.a(i)^4))/(task4.qdivi^2);
-    task5.coefvct = [task5.A  0  1 0 -1];     % Coefficient Vector
-    task5.x = real(roots(task5.coefvct));
-    task5.param = 0;
-    for j = 4:-1:1
-        task5.a = task5.x(j)-1;
-    if ((task5.x(j) > task5.param) && (abs(task5.a) > 1e-03))
-        task5.M(i) = task5.x(j);
-        break
-    end
-    end
+    task5.M(i) = sqrt((-1+sqrt(1+4*task5.A))/(2*task5.A));
+    task5.Vkt(i) = task5.M(i)*data.a(task5.hRange(i))*1.94384;
 end
-task5.Vdivc = sqrt(task4.qdivc/(0.5*task4.rhoSL));
-task5.KTAS = task5.Vdivc*1.94384;
+
+task5.KTAS = task5.M(1)*data.a(0)*1.94384;
+task4.qdivc = 0.5*data.rho(0)*(task5.M(1)*data.a(0))^2;
+
 fprintf('The compressible divergence dynamic pressure at sea level qdiv = %f \n', task4.qdivc)
 fprintf('The compressible divergence speed at sea level Vdiv = %f knots \n', task5.KTAS)
 
+task5.hRange = task5.hRange/0.3048;
 
 figure(1)
-plot(task5.M, task5.hRange, 'b')
-for i = 1:3
-    yline(task5.hRange(i*1000), 'r');
-end
+plot(task5.M, task5.hRange, 'r--','LineWidth',1.5)
+yline(task5.hRange(find(abs(task5.hRange-10000) < 0.3)), 'b','LineWidth',1);
+yline(task5.hRange(find(abs(task5.hRange-20000) < 0.5)), 'b','LineWidth',1);
+yline(task5.hRange(find(abs(task5.hRange-30000) < 0.5)), 'b','LineWidth',1);
+grid on
+title('Divergence envelope in M-H plot')
+xlabel('Mach number [-]')
+ylabel('Height [ft]')
+legend('Divergence envelope', 'H1 = 10000ft', 'H2 = 20000ft', 'H3 = 30000ft')
+
+figure(2)
+plot(task5.Vkt, task5.hRange, 'r--','LineWidth',1.5)
+yline(task5.hRange(find(abs(task5.hRange-10000) < 0.3)), 'b','LineWidth',1);
+yline(task5.hRange(find(abs(task5.hRange-20000) < 0.5)), 'b','LineWidth',1);
+yline(task5.hRange(find(abs(task5.hRange-30000) < 0.5)), 'b','LineWidth',1);
+grid on
+title('Divergence envelope in V-H plot')
+xlabel('True air speed [kt]')
+ylabel('Height [ft]')
+legend('Divergence envelope', 'H1 = 10000ft', 'H2 = 20000ft', 'H3 = 30000ft')
 
 %% FUNCTIONS
 
