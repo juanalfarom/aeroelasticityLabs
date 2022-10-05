@@ -252,10 +252,12 @@ task2.possible_nu = linspace(0.01,0.5,100000);
 % end
 
 %% TASK 03
-task3.J = 
-task3.I = 
-kb = 64*E*I
-kt = 4*J*data.G/(3*data.L);
+
+task3.t = 0.8e03; %0.8 mm
+task3.J = task1.Iyy(task3.t);
+task3.I = task1.Ixx(task3.t);
+kb = 64*data.E*task3.I/(9*data.L^3);
+kt = 4*task3.J*data.G/(3*data.L);
 
 
 %% TASK 04
