@@ -60,8 +60,16 @@ task1.Ixx = @(t) (((1/12)*data.Cstr*(data.nu*data.Cstr)^3)-((1/12)*(data.Cstr-2*
 task1.Izz = @(t) (((1/12)*data.nu*data.Cstr*(data.Cstr)^3)-((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))^3));
 task1.Iyy = @(t) ((1/12)*data.nu*data.Cstr*data.Cstr*(data.Cstr^2 + (data.nu*data.Cstr)^2)) - ((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))*((data.Cstr-2*data.tspar(t))^2 + (data.nu*data.Cstr-2*data.tskin(t))^2));
 task1.J   = @(t) data.rho*task1.Iyy(t);
-task1.solver = @(t) (((1/12)*data.nu*data.Cstr*(data.Cstr)^3)-((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))^3))/((data.nu*data.Cstr^2)-((data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))));
-eq = @(t)(((task1.firstWB*2*pi*(data.L^2)/((1.875)^2))^2)*data.rho)/data.E - task1.solver(t);
+% task1.solver = @(t) (((1/12)*data.nu*data.Cstr*(data.Cstr)^3)-((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))^3))/((data.nu*data.Cstr^2)-((data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))));
+% eq = @(t)(((task1.firstWB*2*pi*(data.L^2)/((1.875)^2))^2)*data.rho)/data.E - task1.solver(t);
+
+task1.mode1_fun = @(t) ((1.875)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task1.A(t)))*task1.Ixx(t)) - task1.firstWB;
+task1.mode2_fun = @(t) ((4.694)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task1.A(t)))*task1.Ixx(t)) - task1.secondWB;
+task1.mode3_fun = @(t) ((7.855)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task1.A(t)))*task1.Ixx(t)) - task1.thirdWB;
+t0_guess = 0.0001;
+task1.t_WB1 = fzero(task1.mode1_fun,t0_guess);
+task1.t_WB2 = fzero(task1.mode2_fun,t0_guess);
+task1.t_WB3 = fzero(task1.mode3_fun,t0_guess);
 
 possible_t = linspace(0.0001, 0.005, 100000);
 
