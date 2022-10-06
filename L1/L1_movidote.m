@@ -19,10 +19,8 @@ data.v = 0.33;                    % Poisson`s ratio
 data.tskin = @(t) t;              % Upper and lower skin thickness [m]
 data.tspar = @(t) 3*t;            % Front and rear spar thickness [m]
 
-%data.tspar = @(t) t;            % Front and rear spar thickness [m]
-
-data.nodes = 8;                   % Number of nodes the beam will be divided in []
-data.ntries = 2;                  % Number of tries for the thickness []
+data.nodes = 20;                   % Number of nodes the beam will be divided in []
+data.ntries = 2000;                  % Number of tries for the thickness []
 
 %% TASK 01
 
@@ -36,7 +34,8 @@ data.ntries = 2;                  % Number of tries for the thickness []
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Vector with possible thickness [m]s
-task1.possible_t = linspace(0.0001,0.003,data.ntries);
+task1.possible_t = linspace(0.00001,0.001,data.ntries);
+%task1.possible_t = linspace(0.0001,0.000781,2);
 
 task1.firstWB = 3.47;
 task1.secondWB = 21.27;
@@ -59,7 +58,7 @@ task1.Mass = @(t) data.rho*data.L*task1.A(t);
 task1.Ixx = @(t) (((1/12)*data.Cstr*(data.nu*data.Cstr)^3)-((1/12)*(data.Cstr-2*data.tspar(t))*(data.nu*data.Cstr-2*data.tskin(t))^3));
 task1.Izz = @(t) (((1/12)*data.nu*data.Cstr*(data.Cstr)^3)-((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))^3));
 task1.Iyy = @(t) ((1/12)*data.nu*data.Cstr*data.Cstr*(data.Cstr^2 + (data.nu*data.Cstr)^2)) - ((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))*((data.Cstr-2*data.tspar(t))^2 + (data.nu*data.Cstr-2*data.tskin(t))^2));
-task1.J   = @(t) data.rho*task1.Iyy(t);
+task1.J   = @(t) 2*3*t^2*(data.Cstr - 3*t)^2*(data.Cstr*data.nu - t)^2/(data.Cstr*3*t + data.nu*data.Cstr*t - 9*t^2 - t^2);
 % task1.solver = @(t) (((1/12)*data.nu*data.Cstr*(data.Cstr)^3)-((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))^3))/((data.nu*data.Cstr^2)-((data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))));
 % eq = @(t)(((task1.firstWB*2*pi*(data.L^2)/((1.875)^2))^2)*data.rho)/data.E - task1.solver(t);
 
@@ -67,10 +66,11 @@ task1.mode1_fun = @(t) ((1.875)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task1.
 task1.mode2_fun = @(t) ((4.694)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task1.A(t)))*task1.Ixx(t)) - task1.secondWB;
 task1.mode3_fun = @(t) ((7.855)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task1.A(t)))*task1.Ixx(t)) - task1.thirdWB;
 t0_guess = 0.0001;
-
 task1.t_WB1 = fzero(task1.mode1_fun,t0_guess);
 task1.t_WB2 = fzero(task1.mode2_fun,t0_guess);
 task1.t_WB3 = fzero(task1.mode3_fun,t0_guess);
+
+% possible_t = linspace(0.0001, 0.005, 1000);
 
 % for i = 1:length(possible_t)
 % sol = eq(possible_t(i));
@@ -81,75 +81,103 @@ task1.t_WB3 = fzero(task1.mode3_fun,t0_guess);
 % end
 
 %If col> dividing_col --> torsion mode
-% task1.dividing_col = (2*data.nodes - 2)/2 + 2;
-% 
-% 
-% for i=1:length(task1.possible_t)
-%     %Initializing the matrices
-%     task1.K = zeros(data.nodes*2,data.nodes*2);
-%     task1.masses = zeros(1,data.nodes);
-%     task1.M = zeros(data.nodes*2,data.nodes*2);
-%     task1.M_minus = zeros(data.nodes*2,data.nodes*2);
-% 
-%     current_index = 1;
-% 
-%     for j=1:(data.nodes-1)
-%         if j==1||j==(data.nodes-1)
-%             l = data.L/(data.nodes-1)/2;
-%         else
-%             l = data.L/(data.nodes-1);
-%         end
-% 
-%         task1.K(current_index:current_index+3,current_index:current_index+3) = ...
-%             task1.K(current_index:current_index+3,current_index:current_index+3) + ...
-%                     Stiffness_matrix_beam(data,task1.A(task1.possible_t(i)), ...
-%                                           task1.Ixx(task1.possible_t(i)), ...
-%                                           task1.Izz(task1.possible_t(i)), ...
-%                                           task1.J(task1.possible_t(i)), ...
-%                                           data.L/(data.nodes-1));
-%         task1.thickness = task1.possible_t(i);
-%         task1.area = task1.A(task1.possible_t(i));
-%         task1.mass = task1.Mass(task1.possible_t(i));
-% 
-%         if j==1
-%             task1.masses(j) = task1.mass/(data.nodes-1)/2;
-%             task1.masses(end) = task1.mass/(data.nodes-1)/2;
-%         else
-%             task1.masses(j) = task1.mass/(data.nodes-1);
-%         end
-%         current_index = current_index + 2;
-%     end
-% 
-%     current_index = 1;
-% 
-%     for j=1:data.nodes
-%         task1.M(current_index:current_index+1,current_index:current_index+1) = ...
-%                     Mass_matrix_beam(task1.masses(j), ...
-%                                      task1.Ixx(task1.possible_t(i)), ...
-%                                      task1.Iyy(task1.possible_t(i)), ...
-%                                      task1.Izz(task1.possible_t(i)));
-%         current_index = current_index + 2;
-%     end
-% 
-%     
-%     
-%     for j=1:(2*data.nodes)
-%         task1.M_minus(j,j) = task1.M(j,j)^(-1/2);
-%     end
-% 
-%     %Clamping
-%     task1.M(1,1) = 0;
-%     task1.M(2,2) = 0;
-%     task1.M_minus(1,1) = 0;
-%     task1.M_minus(2,2) = 0;
-% 
-%     task1.K_changed = task1.M_minus*task1.K*task1.M_minus;
-% 
-%     [task1.eigenvectors,task1.eigenvalues] = eig(task1.K_changed);
-% 
-%     task1.freqs = diag(sqrt(task1.eigenvalues))/2/pi;
-%     task1.modes = task1.M_minus*(task1.eigenvectors);
-% 
+task1.dividing_col = (2*data.nodes - 2)/2 + 2;
+
+
+for i=1:length(task1.possible_t)
+    %Initializing the matrices
+    task1.K = zeros(data.nodes*2,data.nodes*2);
+    task1.masses = zeros(1,data.nodes);
+    task1.M = zeros(data.nodes*2,data.nodes*2);
+    task1.M_minus = zeros(data.nodes*2,data.nodes*2);
+
+    current_index = 1;
+
+    for j=1:(data.nodes-1)
+
+        task1.K(current_index:current_index+3,current_index:current_index+3) = ...
+            task1.K(current_index:current_index+3,current_index:current_index+3) + ...
+                    Stiffness_matrix_beam(data,task1.A(task1.possible_t(i)), ...
+                                          task1.Ixx(task1.possible_t(i)), ...
+                                          task1.Izz(task1.possible_t(i)), ...
+                                          task1.J(task1.possible_t(i)), ...
+                                          data.L/(data.nodes-1));
+        task1.thickness = task1.possible_t(i);
+        task1.area = task1.A(task1.possible_t(i));
+        task1.mass = task1.Mass(task1.possible_t(i));
+
+        if j==1
+            task1.masses(j) = task1.mass/(data.nodes-1)/2;
+            task1.masses(end) = task1.mass/(data.nodes-1)/2;
+        else
+            task1.masses(j) = task1.mass/(data.nodes-1);
+        end
+        current_index = current_index + 2;
+    end
+
+    current_index = 1;
+
+    for j=1:data.nodes
+        task1.M(current_index:current_index+1,current_index:current_index+1) = ...
+                    Mass_matrix_beam(task1.masses(j), ...
+                                     task1.Ixx(task1.possible_t(i)), ...
+                                     task1.Iyy(task1.possible_t(i)), ...
+                                     task1.Izz(task1.possible_t(i)), ...
+                                     data.rho,data.L/(data.nodes-1));
+        current_index = current_index + 2;
+    end
+
+    
+    
+    for j=1:(2*data.nodes)
+        task1.M_minus(j,j) = task1.M(j,j)^(-1/2);
+    end
+
+    %Clamping
+    task1.M(1,1) = 0;
+    task1.M(2,2) = 0;
+    task1.M(1,2) = 0;
+    task1.M(2,1) = 0;
+    task1.M_minus(1,1) = 0;
+    task1.M_minus(2,2) = 0;
+    task1.M_minus(1,2) = 0;
+    task1.M_minus(2,1) = 0;
+
+    task1.K_changed = task1.M_minus*task1.K*task1.M_minus;
+
+    [task1.eigenvectors,task1.eigenvalues] = eig(task1.K_changed);
+
+    task1.freqs = diag(sqrt(task1.eigenvalues))/2/pi;
+    task1.modes = task1.M_minus*(task1.eigenvectors);
+
+    bending_modes_counter = 1;
+    torsion_modes_counter = 1;
+
+    for j=1:(2*data.nodes)
+        if sum(task1.modes(:,j)) == 0
+            continue
+        else
+            if abs(task1.modes(3,j)) > 1e-9
+                for k=1:data.nodes
+                    task1.bending_modes.bending(k,bending_modes_counter) = task1.modes((2*k-1),j);
+                    task1.bending_modes.torsion(k,bending_modes_counter) = task1.modes(2*k,j);
+                end
+                task1.bending_modes.indeces(bending_modes_counter) = j;
+                task1.bending_modes.freqs(bending_modes_counter) = task1.freqs(j);
+                bending_modes_counter = bending_modes_counter + 1;
+            else
+                for k=1:data.nodes
+                    task1.torsion_modes.bending(k,torsion_modes_counter) = task1.modes((2*k-1),j);
+                    task1.torsion_modes.torsion(k,torsion_modes_counter) = task1.modes(2*k,j);
+                end
+                task1.torsion_modes.indeces(bending_modes_counter) = j;
+                task1.torsion_modes.freqs(torsion_modes_counter) = task1.freqs(j);
+                torsion_modes_counter = torsion_modes_counter + 1;
+            end
+        end
+
+    end
+
 %     for k=1:(2*data.nodes)
 %         for j=1:data.nodes
 %             task1.bending(j,k) = task1.modes((2*j-1),k);
@@ -170,60 +198,64 @@ task1.t_WB3 = fzero(task1.mode3_fun,t0_guess);
 %         task1.torsion_modes.bending(:,j-task1.dividing_col) = task1.bending(:,j);
 %         task1.torsion_modes.torsion(:,j-task1.dividing_col) = task1.torsion(:,j);
 %     end
-%     
-%     task1.firstWB_error = sqrt(abs(task1.firstWB^2 - task1.bending_modes.freqs(1)^2));
-%     task1.secondWB_error = sqrt(abs(task1.secondWB^2 - task1.bending_modes.freqs(2)^2));
-%     task1.thirdWB_error = sqrt(abs(task1.thirdWB^2 - task1.bending_modes.freqs(3)^2));
-%     task1.chordwise_error = sqrt(abs(task1.chordwise^2 - task1.bending_modes.freqs(1)^2));
-%     task1.torsionWB_error = sqrt(abs(task1.torsionWB^2 - task1.torsion_modes.freqs(1)^2));
-% 
-%     error = task1.firstWB_error + task1.secondWB_error + task1.thirdWB_error + task1.torsionWB_error;
-%     
-%     if error < task1.error
-%         task1.error = error;
-%         fprintf('The simulation is closer to converging with t = %f and a total error of %f \n',task1.thickness,task1.error)
-%         solution = task1;
-%     end
-% 
-% end
-% 
-% task1 = solution;
-% 
-% clear('solution','error','i','j','k')
-% 
-% figure(1)
-% sgtitle(['Bending modes for t = ', num2str(task1.thickness)])
-% for i=1:length(task1.bending_modes.freqs)/2+1
-%     subplot(data.nodes/2,2,i)
-%     plot(task1.bending_modes.bending(:,i))
-%     title(['Bending mode with freq = ' num2str(task1.bending_modes.freqs(i))])
-% 
-%     if i<length(task1.bending_modes.freqs)/2 && data.nodes>10
-%         subplot(data.nodes/2,2,i+10)
-%         plot(task1.bending_modes.bending(:,i+10))
-%         title(['Bending mode with freq = ' num2str(task1.bending_modes.freqs(i+10))])
-%     end
-% 
-% end
-% 
-% hold off
+    
+    task1.firstWB_error = sqrt(abs(task1.firstWB^2 - task1.bending_modes.freqs(1)^2));
+    task1.secondWB_error = sqrt(abs(task1.secondWB^2 - task1.bending_modes.freqs(2)^2));
+    task1.thirdWB_error = sqrt(abs(task1.thirdWB^2 - task1.bending_modes.freqs(3)^2));
+    task1.chordwise_error = sqrt(abs(task1.chordwise^2 - task1.bending_modes.freqs(1)^2));
+    task1.torsionWB_error = sqrt(abs(task1.torsionWB^2 - task1.torsion_modes.freqs(1)^2));
 
-% figure(2)
-% sgtitle(['Torsion modes for t = ', num2str(task1.thickness)])
-% for i=1:length(task1.bending_modes.freqs)/2+1
-%     subplot(data.nodes/2,2,i)
-%     plot(task1.torsion_modes.torsion(:,i))
-%     title(['Torsion mode with freq = ' num2str(task1.torsion_modes.freqs(i))])
-% 
-%     if i<length(task1.bending_modes.freqs)/2 && data.nodes>10
-%         subplot(data.nodes/2,2,i+10)
-%         plot(task1.torsion_modes.torsion(:,i+10))
-%         title(['Torsion mode with freq = ' num2str(task1.torsion_modes.freqs(i+10))])
-%     end
-% 
-% end
-% 
-% hold off
+%     error = task1.firstWB_error + task1.secondWB_error + task1.thirdWB_error + task1.torsionWB_error;
+    error = task1.firstWB_error + task1.secondWB_error + task1.thirdWB_error;
+    error_v(i) = error;
+    f(i,:) = task1.bending_modes.freqs(1:3);
+    
+    %disp(task1.bending_modes.freqs(1:3))
+    if error < task1.error
+        task1.error = error;
+        fprintf('The simulation is closer to converging with t = %f and a total error of %f \n',task1.thickness,task1.error)
+        solution = task1;
+    end
+
+end
+
+task1 = solution;
+
+clear('solution','error','i','j','k')
+
+figure(1)
+sgtitle(['Bending modes for t = ', num2str(task1.thickness)])
+for i=1:10
+    subplot(10,2,i)
+    plot(task1.bending_modes.bending(:,i))
+    title(['Bending mode with freq = ' num2str(task1.bending_modes.freqs(i))])
+
+    if i<length(task1.bending_modes.freqs)/2 && data.nodes>10
+        subplot(data.nodes/2,2,i+10)
+        plot(task1.bending_modes.bending(:,i+10))
+        title(['Bending mode with freq = ' num2str(task1.bending_modes.freqs(i+10))])
+    end
+
+end
+
+hold off
+
+figure(2)
+sgtitle(['Torsion modes for t = ', num2str(task1.thickness)])
+for i=1:10
+    subplot(10,2,i)
+    plot(task1.torsion_modes.torsion(:,i))
+    title(['Torsion mode with freq = ' num2str(task1.torsion_modes.freqs(i))])
+
+    if i<length(task1.bending_modes.freqs)/2 && data.nodes>10
+        subplot(data.nodes/2,2,i+10)
+        plot(task1.torsion_modes.torsion(:,i+10))
+        title(['Torsion mode with freq = ' num2str(task1.torsion_modes.freqs(i+10))])
+    end
+
+end
+
+hold off
 
 %% TASK 02
 
@@ -236,8 +268,6 @@ task1.t_WB3 = fzero(task1.mode3_fun,t0_guess);
 %   -Estimate nu to match results for table 2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-task1.thickness = 0.0008;
-
 task2.firstWB = 6.74;
 task2.secondWB = 40.71;
 task2.thirdWB = 108.80;
@@ -249,27 +279,8 @@ task2.A = @(nu) (nu*data.Cstr^2)-((nu*data.Cstr-2*data.tskin(task1.thickness))*(
 % Second moments of area of the beam as function of nu
 task2.Ixx = @(nu) (((1/12)*nu*data.Cstr^4)-((1/12)*(data.Cstr-2*data.tspar(task1.thickness))*(nu*data.Cstr-2*data.tskin(task1.thickness))^3));
 task2.Izz = @(nu) (((1/12)*nu*data.Cstr^4)-((1/12)*((data.Cstr-2*data.tspar(task1.thickness))^3)*(nu*data.Cstr-2*data.tskin(task1.thickness))));
-
-task2.mode1_fun = @(nu) ((1.875)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.firstWB;
-task2.mode2_fun = @(nu) ((4.694)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.secondWB;
-task2.mode3_fun = @(nu) ((7.855)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.thirdWB;
-
-nu_vals = linspace(0.1,0.2,5000);
-abs_error = 1e36;
-
-for i=1:length(nu_vals)
-    error = task2.mode1_fun(nu_vals(i)) + task2.mode2_fun(nu_vals(i)) + task2.mode3_fun(nu_vals(i));
-    if error < abs_error
-        abs_error = error;
-        task2.nu_WB1 = task2.mode1_fun(nu_vals(i));
-        task2.nu_WB2 = task2.mode2_fun(nu_vals(i));
-        task2.nu_WB3 = task2.mode3_fun(nu_vals(i));
-        task2.nu = nu_vals(i);
-    end
-end
-% task2.nu_WB1 = fzero(task2.mode1_fun,nu_guess);
-% task2.nu_WB2 = fzero(task2.mode2_fun,nu_guess);
-% task2.nu_WB3 = fzero(task2.mode3_fun,nu_guess);
+% Vector with possible nu
+task2.possible_nu = linspace(0.01,0.5,100000);
 
 % Call function to solve task 02
 %[task2.nu,task2.area] = task2Fcn(data,task2);
