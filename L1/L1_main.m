@@ -71,8 +71,6 @@ task1.t_WB1 = fzero(task1.mode1_fun,t0_guess);
 task1.t_WB2 = fzero(task1.mode2_fun,t0_guess);
 task1.t_WB3 = fzero(task1.mode3_fun,t0_guess);
 
-possible_t = linspace(0.0001, 0.005, 100000);
-
 % for i = 1:length(possible_t)
 % sol = eq(possible_t(i));
 % a = abs(sol)
