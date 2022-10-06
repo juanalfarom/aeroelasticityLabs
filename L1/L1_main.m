@@ -59,7 +59,7 @@ task1.Mass = @(t) data.rho*data.L*task1.A(t);
 task1.Ixx = @(t) (((1/12)*data.Cstr*(data.nu*data.Cstr)^3)-((1/12)*(data.Cstr-2*data.tspar(t))*(data.nu*data.Cstr-2*data.tskin(t))^3));
 task1.Izz = @(t) (((1/12)*data.nu*data.Cstr*(data.Cstr)^3)-((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))^3));
 task1.Iyy = @(t) ((1/12)*data.nu*data.Cstr*data.Cstr*(data.Cstr^2 + (data.nu*data.Cstr)^2)) - ((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))*((data.Cstr-2*data.tspar(t))^2 + (data.nu*data.Cstr-2*data.tskin(t))^2));
-task1.J   = @(t) data.rho*task1.Iyy(t);
+task1.J   = @(t) 2*3*t^2*(data.Cstr - 3*t)^2*(data.Cstr*data.nu - t)^2/(data.Cstr*3*t + data.nu*data.Cstr*t - 9*t^2 - t^2);
 % task1.solver = @(t) (((1/12)*data.nu*data.Cstr*(data.Cstr)^3)-((1/12)*(data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))^3))/((data.nu*data.Cstr^2)-((data.nu*data.Cstr-2*data.tskin(t))*(data.Cstr-2*data.tspar(t))));
 % eq = @(t)(((task1.firstWB*2*pi*(data.L^2)/((1.875)^2))^2)*data.rho)/data.E - task1.solver(t);
 
@@ -253,9 +253,15 @@ task2.Izz = @(nu) (((1/12)*nu*data.Cstr^4)-((1/12)*((data.Cstr-2*data.tspar(task
 task2.mode1_fun = @(nu) ((1.875)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.firstWB;
 task2.mode2_fun = @(nu) ((4.694)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.secondWB;
 task2.mode3_fun = @(nu) ((7.855)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.thirdWB;
+%nu0_guess = 0.0001;
 
 nu_vals = linspace(0.1,0.2,5000);
 abs_error = 1e36;
+
+
+% task2.nu_WB1 = fzero(task2.mode1_fun,nu0_guess);
+% task2.nu_WB2 = fzero(task2.mode2_fun,nu0_guess);
+% task2.nu_WB3 = fzero(task2.mode3_fun,nu0_guess);
 
 for i=1:length(nu_vals)
     error = task2.mode1_fun(nu_vals(i)) + task2.mode2_fun(nu_vals(i)) + task2.mode3_fun(nu_vals(i));
@@ -281,9 +287,9 @@ end
 
 %% TASK 03
 
-task3.t = 0.8e03; %0.8 mm
-task3.J = task1.Iyy(task3.t);
-task3.I = task1.Ixx(task3.t);
+task3.t = task1.t_WB3;
+task3.J = task1.J(task1.t_WB3);
+task3.I = task1.Ixx(task1.t_WB3);
 kb = 64*data.E*task3.I/(9*data.L^3);
 kt = 4*task3.J*data.G/(3*data.L);
 
@@ -303,7 +309,7 @@ task4.e = 0.625;
 task4.S = 62.5;
 task4.c = 6.25; 
 task4.Cl_alpha = 2*pi;
-task4.Kt = 1.4493e07;
+task4.Kt = kt;
 task4.EA = 0.35*task4.c;
 task4.RS = 0.55*task4.c;
 task4.FS = 0.15*task4.c;
