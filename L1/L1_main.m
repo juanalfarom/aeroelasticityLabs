@@ -255,11 +255,23 @@ task2.Izz = @(nu) (((1/12)*nu*data.Cstr^4)-((1/12)*((data.Cstr-2*data.tspar(task
 task2.mode1_fun = @(nu) ((1.875)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.firstWB;
 task2.mode2_fun = @(nu) ((4.694)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.secondWB;
 task2.mode3_fun = @(nu) ((7.855)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.thirdWB;
-nu_guess = 0.1;
 
-task2.nu_WB1 = fzero(task2.mode1_fun,nu_guess);
-task2.nu_WB2 = fzero(task2.mode2_fun,nu_guess);
-task2.nu_WB3 = fzero(task2.mode3_fun,nu_guess);
+nu_vals = linspace(0.1,0.2,5000);
+abs_error = 1e36;
+
+for i=1:length(nu_vals)
+    error = task2.mode1_fun(nu_vals(i)) + task2.mode2_fun(nu_vals(i)) + task2.mode3_fun(nu_vals(i));
+    if error < abs_error
+        abs_error = error;
+        task2.nu_WB1 = task2.mode1_fun(nu_vals(i));
+        task2.nu_WB2 = task2.mode2_fun(nu_vals(i));
+        task2.nu_WB3 = task2.mode3_fun(nu_vals(i));
+        task2.nu = nu_vals(i);
+    end
+end
+% task2.nu_WB1 = fzero(task2.mode1_fun,nu_guess);
+% task2.nu_WB2 = fzero(task2.mode2_fun,nu_guess);
+% task2.nu_WB3 = fzero(task2.mode3_fun,nu_guess);
 
 % Call function to solve task 02
 %[task2.nu,task2.area] = task2Fcn(data,task2);
