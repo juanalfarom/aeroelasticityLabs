@@ -67,6 +67,7 @@ task1.mode1_fun = @(t) ((1.875)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task1.
 task1.mode2_fun = @(t) ((4.694)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task1.A(t)))*task1.Ixx(t)) - task1.secondWB;
 task1.mode3_fun = @(t) ((7.855)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task1.A(t)))*task1.Ixx(t)) - task1.thirdWB;
 t0_guess = 0.0001;
+
 task1.t_WB1 = fzero(task1.mode1_fun,t0_guess);
 task1.t_WB2 = fzero(task1.mode2_fun,t0_guess);
 task1.t_WB3 = fzero(task1.mode3_fun,t0_guess);
@@ -237,6 +238,8 @@ possible_t = linspace(0.0001, 0.005, 100000);
 %   -Estimate nu to match results for table 2
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+task1.thickness = 0.0008;
+
 task2.firstWB = 6.74;
 task2.secondWB = 40.71;
 task2.thirdWB = 108.80;
@@ -248,8 +251,15 @@ task2.A = @(nu) (nu*data.Cstr^2)-((nu*data.Cstr-2*data.tskin(task1.thickness))*(
 % Second moments of area of the beam as function of nu
 task2.Ixx = @(nu) (((1/12)*nu*data.Cstr^4)-((1/12)*(data.Cstr-2*data.tspar(task1.thickness))*(nu*data.Cstr-2*data.tskin(task1.thickness))^3));
 task2.Izz = @(nu) (((1/12)*nu*data.Cstr^4)-((1/12)*((data.Cstr-2*data.tspar(task1.thickness))^3)*(nu*data.Cstr-2*data.tskin(task1.thickness))));
-% Vector with possible nu
-task2.possible_nu = linspace(0.01,0.5,100000);
+
+task2.mode1_fun = @(nu) ((1.875)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.firstWB;
+task2.mode2_fun = @(nu) ((4.694)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.secondWB;
+task2.mode3_fun = @(nu) ((7.855)^2/(2*pi*data.L^2))*sqrt((data.E/(data.rho*task2.A(nu)))*task2.Ixx(nu)) - task2.thirdWB;
+nu_guess = 0.1;
+
+task2.nu_WB1 = fzero(task2.mode1_fun,nu_guess);
+task2.nu_WB2 = fzero(task2.mode2_fun,nu_guess);
+task2.nu_WB3 = fzero(task2.mode3_fun,nu_guess);
 
 % Call function to solve task 02
 %[task2.nu,task2.area] = task2Fcn(data,task2);

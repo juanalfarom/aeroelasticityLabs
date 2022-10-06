@@ -34,8 +34,8 @@ data.ntries = 2000;                  % Number of tries for the thickness []
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Vector with possible thickness [m]s
-task1.possible_t = linspace(0.0001,0.002,data.ntries);
-% task1.possible_t = linspace(0.0001,0.0008,2);
+task1.possible_t = linspace(0.00001,0.001,data.ntries);
+%task1.possible_t = linspace(0.0001,0.000781,2);
 
 task1.firstWB = 3.47;
 task1.secondWB = 21.27;
@@ -207,7 +207,10 @@ for i=1:length(task1.possible_t)
 
 %     error = task1.firstWB_error + task1.secondWB_error + task1.thirdWB_error + task1.torsionWB_error;
     error = task1.firstWB_error + task1.secondWB_error + task1.thirdWB_error;
+    error_v(i) = error;
+    f(i,:) = task1.bending_modes.freqs(1:3);
     
+    %disp(task1.bending_modes.freqs(1:3))
     if error < task1.error
         task1.error = error;
         fprintf('The simulation is closer to converging with t = %f and a total error of %f \n',task1.thickness,task1.error)
@@ -222,8 +225,8 @@ clear('solution','error','i','j','k')
 
 figure(1)
 sgtitle(['Bending modes for t = ', num2str(task1.thickness)])
-for i=1:length(task1.bending_modes.freqs)/2+1
-    subplot(data.nodes/2,2,i)
+for i=1:10
+    subplot(10,2,i)
     plot(task1.bending_modes.bending(:,i))
     title(['Bending mode with freq = ' num2str(task1.bending_modes.freqs(i))])
 
@@ -239,8 +242,8 @@ hold off
 
 figure(2)
 sgtitle(['Torsion modes for t = ', num2str(task1.thickness)])
-for i=1:length(task1.bending_modes.freqs)/2+1
-    subplot(data.nodes/2,2,i)
+for i=1:10
+    subplot(10,2,i)
     plot(task1.torsion_modes.torsion(:,i))
     title(['Torsion mode with freq = ' num2str(task1.torsion_modes.freqs(i))])
 
