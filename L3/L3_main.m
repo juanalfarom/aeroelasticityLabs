@@ -51,18 +51,18 @@ mode2.f_linear = spline(velocities(2:end),mode2.f(2:end),test_velocities);
 mode2.fup_linear = spline(velocities(2:end),mode2.fup(2:end),test_velocities);
 mode2.flo_linear = spline(velocities(2:end),mode2.flo(2:end),test_velocities);
 
-flutter.g = 100;
-flutter.idx = 0;
+flutter.g_linear = 100;
+flutter.idx_linear = 0;
 
 for i=1:length(test_velocities)
-    if (abs(mode2.g_linear(i))<flutter.g)&&(mode2.g_linear(i)>0)
-        flutter.g = mode2.g_linear(i);
-        flutter.idx = i;
+    if (abs(mode2.g_linear(i))<flutter.g_linear)&&(mode2.g_linear(i)>0)
+        flutter.g_linear = mode2.g_linear(i);
+        flutter.idx_linear = i;
     end
 end
 
-flutter.V = test_velocities(flutter.idx);
-flutter.glo = mode2.glo_linear(flutter.idx);
+flutter.V_linear = test_velocities(flutter.idx_linear);
+flutter.glo_linear = mode2.glo_linear(flutter.idx_linear);
 
 %% Section 4
 
@@ -74,8 +74,27 @@ mode2.beta = mode2.w.*mode2.g;
 
 
 flutter.F = ((mode2.w.^2 - mode1.w.^2)/2 + (mode2.beta.^2 - mode1.beta.^2)/2).^2 + ...
-            4.*mode1.beta.*mode2.beta.*((mode2.w.^2 + mode1.w.^2)/2 + 2*(mode2.beta.^2 + mode1.beta.^2)/2).^2 - ...
-            (((mode2.beta - mode1.beta)/(mode2.beta + mode1.beta)).*(mode2.w.^2 - mode1.w.^2)/2 + 2*(mode2.beta.^2 + mode1.beta.^2)/2).^2;
+            4.*mode1.beta.*mode2.beta.*((mode2.w.^2 + mode1.w.^2)/2 + 2*(mode2.beta + mode1.beta).^2/4) - ...
+            (((mode2.beta - mode1.beta)./(mode2.beta + mode1.beta)).*(mode2.w.^2 - mode1.w.^2)/2 + 2*(mode2.beta + mode1.beta).^2/4).^2;
+
+q = 0.5*1.225.*velocities.^2;
+test_q = 0.5*1.225.*test_velocities.^2;
+
+flutter.fit = polyfit(q,flutter.F,2);
+flutter.F_approx = polyval(flutter.fit,test_q);
+
+flutter.F_flutter = 100;
+flutter.F_idx = 1;
+
+for i=1:length(flutter.F_approx)
+    if (abs(flutter.F_approx(i))<flutter.F_flutter)&&(flutter.F_approx(i)>0)
+        flutter.F_flutter = flutter.F_approx(i);
+        flutter.F_idx = i;
+    end
+end
+
+flutter.V_flutter = sqrt(test_q(flutter.F_idx)/(0.5*1.225));
+flutter.q_flutter = test_q(flutter.F_idx);
 
 %% figures
 
@@ -121,7 +140,7 @@ if show_figures == 1
     grid on
     xlabel('V (KCAS)')
     ylabel('Frequency [Hz]')
-    xline(flutter.V,'k--',{'Flutter speed'});
+    xline(flutter.V_linear,'k--',{'Flutter speed'});
     legend('Mode 1','Mode 2','Location','best')
     title('Direct Frequency Calculations')
 
@@ -132,13 +151,22 @@ if show_figures == 1
     hold on
     plot([velocities,test_velocities],[mode1.gup,mode1.gup_linear],'b--',[velocities,test_velocities],[mode1.glo,mode1.glo_linear],'b--',[velocities,test_velocities],[mode2.gup,mode2.gup_linear],'r--',[velocities,test_velocities],[mode2.glo,mode2.glo_linear],'r--')
     hold on
-    plot(flutter.V,flutter.g,'k*')
+    plot(flutter.V_linear,flutter.g_linear,'k*')
     xlim([0,max(test_velocities)+10])
     yline(0,'k--')
-    xline(flutter.V,'k--',{'Flutter speed'});
+    xline(flutter.V_linear,'k--',{'Flutter speed'});
     grid on
     xlabel('V (KCAS)')
     ylabel('Damping [-]')
     legend('Mode 1','Mode 2','Location','best')
     title('Direct Damping Calculations')
+
+    figure(2)
+    plot(q,flutter.F,'b',test_q,flutter.F_approx,'b--')
+    yline(0,'k--')
+    xline(flutter.q_flutter,'k--',{'Flutter dynamic pressure'});
+    ylabel('F [-]')
+    xlabel('Dynamic pressure [kg/ms^2]')
+    legend('Data','Approximation','Location','southwest')
+    title('Zimmerman & Weissenburger approximation')
 end
