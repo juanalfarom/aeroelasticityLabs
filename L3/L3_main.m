@@ -33,7 +33,7 @@ mode1.glo = mode1.g - mode1.scatter_g.*mode1.g;
 mode2.gup = mode2.g + mode2.scatter_g.*mode2.g;
 mode2.glo = mode2.g - mode2.scatter_g.*mode2.g;
 
-test_velocities = linspace(220,275,150);
+test_velocities = linspace(215,275,150);
 
 mode1.g_linear = spline(velocities(2:end),mode1.g(2:end),test_velocities);
 mode1.gup_linear = spline(velocities(2:end),mode1.gup(2:end),test_velocities);
@@ -62,20 +62,61 @@ for i=1:length(test_velocities)
 end
 
 flutter.V_linear = test_velocities(flutter.idx_linear);
-flutter.glo_linear = mode2.glo_linear(flutter.idx_linear);
+
+flutter.glo_linear = 100;
+flutter.idxlo_linear = 0;
+for i=1:length(test_velocities)
+    if (abs(mode2.glo_linear(i))<flutter.glo_linear)&&(mode2.glo_linear(i)>0)
+        flutter.glo_linear = mode2.g_linear(i);
+        flutter.idxlo_linear = i;
+    end
+end
+
+flutter.Vlo_linear = test_velocities(flutter.idxlo_linear);
+
+flutter.gup_linear = 100;
+flutter.idxup_linear = 0;
+for i=1:length(test_velocities)
+    if (abs(mode2.gup_linear(i))<flutter.gup_linear)&&(mode2.gup_linear(i)>0)
+        flutter.gup_linear = mode2.g_linear(i);
+        flutter.idxup_linear = i;
+    end
+end
+
+flutter.Vup_linear = test_velocities(flutter.idxup_linear);
 
 %% Section 4
 
 mode1.w = mode1.f*2*pi;
 mode2.w = mode2.f*2*pi;
 
+mode1.wlo = mode1.flo*2*pi;
+mode2.wlo = mode2.flo*2*pi;
+
+mode1.wup = mode1.fup*2*pi;
+mode2.wup = mode2.fup*2*pi;
+
 mode1.beta = mode1.w.*mode1.g;
 mode2.beta = mode2.w.*mode2.g;
+
+mode1.betalo = mode1.wlo.*mode1.glo;
+mode2.betalo = mode2.wlo.*mode2.glo;
+
+mode1.betaup = mode1.wup.*mode1.gup;
+mode2.betaup = mode2.wup.*mode2.gup;
 
 
 flutter.F = ((mode2.w.^2 - mode1.w.^2)/2 + (mode2.beta.^2 - mode1.beta.^2)/2).^2 + ...
             4.*mode1.beta.*mode2.beta.*((mode2.w.^2 + mode1.w.^2)/2 + 2*(mode2.beta + mode1.beta).^2/4) - ...
             (((mode2.beta - mode1.beta)./(mode2.beta + mode1.beta)).*(mode2.w.^2 - mode1.w.^2)/2 + 2*(mode2.beta + mode1.beta).^2/4).^2;
+
+flutter.Flo = ((mode2.wlo.^2 - mode1.wlo.^2)/2 + (mode2.betalo.^2 - mode1.betalo.^2)/2).^2 + ...
+            4.*mode1.betalo.*mode2.betalo.*((mode2.wlo.^2 + mode1.wlo.^2)/2 + 2*(mode2.betalo + mode1.betalo).^2/4) - ...
+            (((mode2.betalo - mode1.betalo)./(mode2.betalo + mode1.betalo)).*(mode2.wlo.^2 - mode1.wlo.^2)/2 + 2*(mode2.betalo + mode1.betalo).^2/4).^2;
+
+flutter.Fup = ((mode2.wup.^2 - mode1.wup.^2)/2 + (mode2.betaup.^2 - mode1.betaup.^2)/2).^2 + ...
+            4.*mode1.betaup.*mode2.betaup.*((mode2.wup.^2 + mode1.wup.^2)/2 + 2*(mode2.betaup + mode1.betaup).^2/4) - ...
+            (((mode2.betaup - mode1.betaup)./(mode2.betaup + mode1.betaup)).*(mode2.wup.^2 - mode1.wup.^2)/2 + 2*(mode2.betaup + mode1.betaup).^2/4).^2;
 
 q = 0.5*1.225.*velocities.^2;
 test_q = 0.5*1.225.*test_velocities.^2;
@@ -95,6 +136,48 @@ end
 
 flutter.V_flutter = sqrt(test_q(flutter.F_idx)/(0.5*1.225));
 flutter.q_flutter = test_q(flutter.F_idx);
+
+%
+
+flutter.fitlo = polyfit(q,flutter.Flo,2);
+flutter.Flo_approx = polyval(flutter.fitlo,test_q);
+
+flutter.Flo_flutter = 100;
+flutter.Flo_idx = 1;
+
+for i=1:length(flutter.Flo_approx)
+    if (abs(flutter.Flo_approx(i))<flutter.Flo_flutter)&&(flutter.Flo_approx(i)>0)
+        flutter.Flo_flutter = flutter.Flo_approx(i);
+        flutter.Flo_idx = i;
+    end
+end
+
+flutter.Vlo_flutter = sqrt(test_q(flutter.Flo_idx)/(0.5*1.225));
+flutter.qlo_flutter = test_q(flutter.Flo_idx);
+
+%
+
+flutter.fitup = polyfit(q,flutter.Fup,2);
+flutter.Fup_approx = polyval(flutter.fitup,test_q);
+
+flutter.Fup_flutter = 100;
+flutter.Fup_idx = 1;
+
+for i=1:length(flutter.Fup_approx)
+    if (abs(flutter.Fup_approx(i))<flutter.Fup_flutter)&&(flutter.Fup_approx(i)>0)
+        flutter.Fup_flutter = flutter.Fup_approx(i);
+        flutter.Fup_idx = i;
+    end
+end
+
+flutter.Vup_flutter = sqrt(test_q(flutter.Fup_idx)/(0.5*1.225));
+flutter.qup_flutter = test_q(flutter.Fup_idx);
+
+%
+
+flutter.Ferror = mean((abs(flutter.F-flutter.Flo) + abs(flutter.F - flutter.Fup))/2./flutter.F);
+flutter.F_lo_error = (flutter.F_approx(1)*(1-flutter.Ferror) - flutter.F_approx(1)) + flutter.F_approx;
+flutter.F_up_error = (flutter.F_approx(1)*(1+flutter.Ferror) - flutter.F_approx(1)) + flutter.F_approx;
 
 %% figures
 
@@ -162,9 +245,29 @@ if show_figures == 1
     title('Direct Damping Calculations')
 
     figure(2)
+    subplot(1,2,1)
     plot(velocities,flutter.F,'b',test_velocities,flutter.F_approx,'b--')
+    hold on
+    plot(velocities,flutter.Flo,'r',test_velocities,flutter.Flo_approx,'r--')
+    hold on
+    plot(velocities,flutter.Fup,'r',test_velocities,flutter.Fup_approx,'r--')
+    hold on
     yline(0,'k--')
-    xline(flutter.V_flutter,'k--',{'Flutter dynamic pressure'});
+    xline(flutter.V_flutter,'k--',{'Flutter KCAS'});
+    ylabel('F [-]')
+    xlabel('Dynamic pressure [kg/ms^2]')
+    legend('Data','Approximation','Location','southwest')
+    title('Zimmerman & Weissenburger approximation')
+
+    subplot(1,2,2)
+    plot(velocities,flutter.F,'b',test_velocities,flutter.F_approx,'b--')
+    hold on
+    plot(velocities,flutter.Flo,'r',test_velocities,flutter.F_lo_error,'r--')
+    hold on
+    plot(velocities,flutter.Fup,'r',test_velocities,flutter.F_up_error,'r--')
+    hold on
+    yline(0,'k--')
+    xline(flutter.V_flutter,'k--',{'Flutter KCAS'});
     ylabel('F [-]')
     xlabel('Dynamic pressure [kg/ms^2]')
     legend('Data','Approximation','Location','southwest')
