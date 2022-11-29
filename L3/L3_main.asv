@@ -162,9 +162,9 @@ if show_figures == 1
     title('Direct Damping Calculations')
 
     figure(2)
-    plot(velocities,flutter.F,'b',test_velocities,flutter.F_approx,'b--')
+    plot(q,flutter.F,'b',test_q,flutter.F_approx,'b--')
     yline(0,'k--')
-    xline(flutter.V_flutter,'k--',{'Flutter dynamic pressure'});
+    xline(flutter.q_flutter,'k--',{'Flutter dynamic pressure'});
     ylabel('F [-]')
     xlabel('Dynamic pressure [kg/ms^2]')
     legend('Data','Approximation','Location','southwest')
