@@ -177,9 +177,42 @@ flutter.qup_flutter = test_q(flutter.Fup_idx);
 
 flutter.Ferror = mean((abs(flutter.F-flutter.Flo) + abs(flutter.F - flutter.Fup))/2./flutter.F);
 flutter.F_lo_error = (flutter.F_approx(1)*(1-flutter.Ferror) - flutter.F_approx(1)) + flutter.F_approx;
+flutter.F_lo_flutter = 100;
+for i=1:length(flutter.F_lo_error)
+    if (abs(flutter.F_lo_error(i))<flutter.F_lo_flutter)&&(flutter.F_lo_error(i)>0)
+        flutter.F_lo_flutter = flutter.F_lo_error(i);
+        flutter.F_lo_idx = i;
+    end
+end
+flutter.V_low_flutter = sqrt(test_q(flutter.F_lo_idx)/(0.5*1.225));
+flutter.q_low_flutter = test_q(flutter.F_lo_idx);
+
 flutter.F_up_error = (flutter.F_approx(1)*(1+flutter.Ferror) - flutter.F_approx(1)) + flutter.F_approx;
 
-%% figures
+flutter.F_up_flutter = 100;
+for i=1:length(flutter.F_up_error)
+    if (abs(flutter.F_up_error(i))<flutter.F_up_flutter)&&(flutter.F_up_error(i)>0)
+        flutter.F_up_flutter = flutter.F_up_error(i);
+        flutter.F_up_idx = i;
+    end
+end
+flutter.V_up_flutter = sqrt(test_q(flutter.F_up_idx)/(0.5*1.225));
+flutter.q_up_flutter = test_q(flutter.F_up_idx);
+
+%% Figures
+set(groot, 'defaultLegendFontSize', 12);
+set(groot, 'defaultTextFontSize', 12);
+set(groot, 'defaultAxesFontSize', 12);
+set(groot, 'defaultAxesLineWidth', 1);
+set(groot, 'defaultAxesXMinorTick', 'on');
+set(groot, 'defaultAxesYMinorTick', 'on');
+set(groot, 'defaultLegendBox', 'off');
+set(groot, 'defaultLegendLocation', 'best');
+set(groot, 'defaultLineLineWidth', 1);
+set(groot, 'defaultLineMarkerSize', 5);
+set(groot, 'defaultAxesTickLabelInterpreter', 'latex');
+set(groot, 'defaultTextInterpreter', 'latex');
+set(groot, 'defaultLegendInterpreter', 'latex');
 
 if show_figures == 1
     figure (1)
@@ -254,10 +287,10 @@ if show_figures == 1
     hold on
     yline(0,'k--')
     xline(flutter.V_flutter,'k--',{'Flutter KCAS'});
-    ylabel('F [-]')
-    xlabel('Dynamic pressure [kg/ms^2]')
-    legend('Data','Approximation','Location','southwest')
-    title('Zimmerman & Weissenburger approximation')
+    ylabel('F [-]','fontsize',14,'interpreter','latex')
+    xlabel('Airspeed [Kts]','fontsize',14,'interpreter','latex')
+    legend('Data','Approximation','Location','southwest','fontsize',14,'interpreter','latex')
+    title('Zimmerman & Weissenburger approximation','fontsize',14,'interpreter','latex')
 
     subplot(1,2,2)
     plot(velocities,flutter.F,'b',test_velocities,flutter.F_approx,'b--')
@@ -268,8 +301,8 @@ if show_figures == 1
     hold on
     yline(0,'k--')
     xline(flutter.V_flutter,'k--',{'Flutter KCAS'});
-    ylabel('F [-]')
-    xlabel('Dynamic pressure [kg/ms^2]')
-    legend('Data','Approximation','Location','southwest')
-    title('Zimmerman & Weissenburger approximation')
+    ylabel('F [-]','fontsize',14,'interpreter','latex')
+    xlabel('Airspeed [m/s]','fontsize',14,'interpreter','latex')
+    legend('Data','Approximation','Location','southwest','fontsize',14,'interpreter','latex')
+    title('Zimmerman & Weissenburger approximation','fontsize',14,'interpreter','latex')
 end
